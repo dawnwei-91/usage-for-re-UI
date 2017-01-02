@@ -1,0 +1,64 @@
+#!/usr/bin/env python
+# -*- coding:utf-8 -*-
+# version 3
+'''
+  This python file is used to get comment infomation like 
+  PRINT_COMMENT("3. Set test preconditions");
+  and signal name like
+  dfts_read_confirm("FCM1_COM","PF\pf_mnt_rud_conf_test\Outputs\rud_mid_sov_lo_engage_conf_cmd", 0);	
+  dfts_confirm_transition("FCM1_COM","PF\pf_mnt_rud_conf_test\Outputs\rud_upr_mon_inh_intg_conf_tst", 0, 0, 2);
+  in the ssi file in the SITP work.
+
+  Input:your ssi file,
+  Output: collected information is stored in result_new.txt .
+  
+  Feel free to contact Wei if you have any new requirement about
+  macro-processing work in SITP and have fun.  
+'''
+
+import re
+import Tkinter
+import tkFileDialog
+
+#filePath = 'C:\\Users\\3869\\Desktop\\SITP_427_TEST_1.ssi'
+# change the SITP ssi file path above to generate your own list.( No longer needed!)
+
+root=Tkinter.Tk()
+root.withdraw()
+f=tkFileDialog.askopenfile(filetypes=[('ssi files','.ssi')])
+fullText=f.read()
+f.close()
+
+split0=fullText.split('PRINT_COMMENT')  # seperate by key PRINT_COMMENT
+
+info=[]
+for splitFirst in split0[1:]: 
+	reg0=r'^\("((.+)?)"\)'   # this one search the PRINT_COMMENT information
+	compileName0=re.compile(reg0)
+	resName=re.findall(compileName0,splitFirst)
+
+	reg_1=r'_confirm(_transition)?\(((.+))\);'
+	compileName_1=re.compile(reg_1)
+	resName_1=re.findall(compileName_1,splitFirst)
+
+
+	temList=[]
+	try:
+		for each in resName_1:
+			temList.append(each[1].split(',')[1].split('\\')[-1])
+	except Exception as e:
+		print e
+	
+	info.append([resName[0][0], temList])
+
+newFile=open('result_new.txt','w')
+newFile.write('*'*50 + '\n' + 'The PRINT_COMMENT together with the child information is shown below:'+ '\n' + '*'*50 + '\n'*3)
+
+for itemFather in info:
+	newFile.write('*' * 50 + '\n')
+	newFile.write(itemFather[0] + '\n')
+
+	for itemChild in itemFather[1]:
+		newFile.write(itemChild[:-1] + '\n')
+	newFile.write('\n')
+newFile.close()
